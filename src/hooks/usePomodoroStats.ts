@@ -161,11 +161,17 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
     return streak
   }, [completedSessions])
 
+  const totalMinutes = useMemo(
+    () => Math.round(completedSessions.reduce((sum, s) => sum + s.duration, 0) / 60),
+    [completedSessions]
+  )
+
   return {
     todayStats,
     weekStats,
     monthStats,
     getStatsByDateRange,
     currentStreak,
+    totalMinutes,
   }
 }
