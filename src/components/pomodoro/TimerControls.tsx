@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { usePomodoroContext } from "@/context/PomodoroContext"
-import { Play, Pause, RotateCcw } from "lucide-react"
+import { Play, Pause, RotateCcw, CheckCircle } from "lucide-react"
 
 export function TimerControls() {
-  const { timerState, selectedTag, startTimer, pauseTimer, resumeTimer, resetTimer } =
+  const { timerState, selectedTag, startTimer, pauseTimer, resumeTimer, resetTimer, completeTimer } =
     usePomodoroContext()
   const { isActive, isPaused } = timerState
 
@@ -23,7 +23,7 @@ export function TimerControls() {
   }
 
   return (
-    <div className="flex gap-3 justify-center">
+    <div className="flex gap-3 justify-center flex-wrap">
       {!isPaused ? (
         <Button size="lg" variant="secondary" onClick={pauseTimer} className="px-8">
           <Pause className="mr-2 h-5 w-5" />
@@ -35,6 +35,11 @@ export function TimerControls() {
           Resume
         </Button>
       )}
+
+      <Button size="lg" variant="outline" onClick={completeTimer} className="px-8">
+        <CheckCircle className="mr-2 h-5 w-5" />
+        Complete
+      </Button>
 
       <Button size="lg" variant="outline" onClick={resetTimer} className="px-8">
         <RotateCcw className="mr-2 h-5 w-5" />
