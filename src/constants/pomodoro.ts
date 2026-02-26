@@ -27,4 +27,10 @@ export const TAG_CONFIG: Record<PomodoroTag, TagConfig> = {
   },
 }
 
+export const TAG_HEX_COLORS: Record<PomodoroTag, string> = {
+  work: "#3b82f6",  // blue-500
+  learn: "#22c55e", // green-500
+  rest: "#a855f7",  // purple-500
+}
+
 export const TIMER_TICK_INTERVAL = 1000 // 1 second in milliseconds
