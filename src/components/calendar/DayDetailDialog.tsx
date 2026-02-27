@@ -14,8 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PomodoroSession, PomodoroTag } from "@/types/pomodoro"
-import { TAG_CONFIG } from "@/constants/pomodoro"
+import { PomodoroSession, CustomTag } from "@/types/pomodoro"
+import { BUILTIN_TAGS, getTagConfig, getTagInlineStyles } from "@/constants/pomodoro"
 import { usePomodoroContext } from "@/context/PomodoroContext"
 import { format } from "date-fns"
 import { Trash2 } from "lucide-react"
@@ -25,6 +25,7 @@ interface DayDetailDialogProps {
   onOpenChange: (open: boolean) => void
   date: Date | null
   sessions: PomodoroSession[]
+  customTags: CustomTag[]
 }
 
 export function DayDetailDialog({
@@ -32,6 +33,7 @@ export function DayDetailDialog({
   onOpenChange,
   date,
   sessions,
+  customTags,
 }: DayDetailDialogProps) {
   const { deleteSession, updateSession } = usePomodoroContext()
 
@@ -52,6 +54,8 @@ export function DayDetailDialog({
     {} as Record<string, number>
   )
 
+  const allTagOptions = [...BUILTIN_TAGS, ...customTags.map((t) => t.id)]
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -71,12 +75,13 @@ export function DayDetailDialog({
                   <h3 className="text-sm font-semibold mb-2">By Category</h3>
                   <div className="flex gap-2 flex-wrap">
                     {Object.entries(byTag).map(([tag, count]) => {
-                      const config = TAG_CONFIG[tag as keyof typeof TAG_CONFIG]
+                      const config = getTagConfig(tag, customTags)
                       return (
                         <Badge
                           key={tag}
                           variant="secondary"
                           className={`${config.bgColor} ${config.textColor}`}
+                          style={getTagInlineStyles(config)}
                         >
                           {config.label}: {count}
                         </Badge>
@@ -90,7 +95,10 @@ export function DayDetailDialog({
                 <h3 className="text-sm font-semibold mb-2">Sessions</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {editableSessions.map((session) => {
-                    const config = TAG_CONFIG[session.tag]
+                    const config = getTagConfig(session.tag, customTags)
+                    const dotStyle = config.color
+                      ? undefined
+                      : { backgroundColor: config.hexColor }
                     const startTime = format(new Date(session.startTime), "HH:mm")
                     const endTime = session.endTime
                       ? format(new Date(session.endTime), "HH:mm")
@@ -102,7 +110,10 @@ export function DayDetailDialog({
                         className="flex items-center justify-between p-2 rounded-md border"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${config.color}`} />
+                          <div
+                            className={`w-3 h-3 rounded-full flex-shrink-0 ${config.color}`}
+                            style={dotStyle}
+                          />
                           <span className="text-sm text-muted-foreground whitespace-nowrap">
                             {startTime} – {endTime}
                           </span>
@@ -113,7 +124,7 @@ export function DayDetailDialog({
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Select
                             value={session.tag}
-                            onValueChange={(newTag: PomodoroTag) =>
+                            onValueChange={(newTag: string) =>
                               updateSession(session.id, { tag: newTag })
                             }
                           >
@@ -121,11 +132,14 @@ export function DayDetailDialog({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {Object.entries(TAG_CONFIG).map(([tagKey, tagCfg]) => (
-                                <SelectItem key={tagKey} value={tagKey}>
-                                  {tagCfg.label}
-                                </SelectItem>
-                              ))}
+                              {allTagOptions.map((tagId) => {
+                                const tagCfg = getTagConfig(tagId, customTags)
+                                return (
+                                  <SelectItem key={tagId} value={tagId}>
+                                    {tagCfg.label}
+                                  </SelectItem>
+                                )
+                              })}
                             </SelectContent>
                           </Select>
                           <Button

@@ -11,10 +11,9 @@ import {
 } from "recharts"
 import { eachDayOfInterval, subDays, startOfDay, endOfDay, isWithinInterval, format } from "date-fns"
 import { usePomodoroContext } from "@/context/PomodoroContext"
-import { TAG_CONFIG, TAG_HEX_COLORS } from "@/constants/pomodoro"
+import { BUILTIN_TAGS, getTagConfig, getTagFillColor } from "@/constants/pomodoro"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PomodoroTag } from "@/types/pomodoro"
 
 const RANGE_OPTIONS = [
   { label: "7d", days: 7 },
@@ -26,14 +25,17 @@ type RangeDays = 7 | 30 | 90
 
 interface ChartDataPoint {
   date: string
-  work: number
-  learn: number
-  rest: number
+  [tagId: string]: number | string
 }
 
 export function TimelineChart() {
-  const { sessions } = usePomodoroContext()
+  const { sessions, customTags } = usePomodoroContext()
   const [rangeDays, setRangeDays] = useState<RangeDays>(30)
+
+  const allTags = useMemo(
+    () => [...BUILTIN_TAGS, ...customTags.map((t) => t.id)],
+    [customTags]
+  )
 
   const chartData = useMemo<ChartDataPoint[]>(() => {
     const today = new Date()
@@ -52,21 +54,17 @@ export function TimelineChart() {
           isWithinInterval(new Date(s.startTime), { start: dayStart, end: dayEnd })
       )
 
-      const counts: Record<PomodoroTag, number> = { work: 0, learn: 0, rest: 0 }
+      const counts: Record<string, number> = Object.fromEntries(allTags.map((id) => [id, 0]))
       for (const s of daySessions) {
-        counts[s.tag]++
+        counts[s.tag] = (counts[s.tag] ?? 0) + 1
       }
 
       return {
         date: format(day, "MMM d"),
-        work: counts.work,
-        learn: counts.learn,
-        rest: counts.rest,
+        ...counts,
       }
     })
-  }, [sessions, rangeDays])
-
-  const tags: PomodoroTag[] = ["work", "learn", "rest"]
+  }, [sessions, rangeDays, allTags])
 
   return (
     <Card className="w-full">
@@ -100,14 +98,19 @@ export function TimelineChart() {
             <Tooltip
               formatter={(value, name) => [
                 value ?? 0,
-                TAG_CONFIG[String(name) as PomodoroTag]?.label ?? String(name),
+                getTagConfig(String(name), customTags).label,
               ]}
             />
             <Legend
-              formatter={(value) => TAG_CONFIG[value as PomodoroTag]?.label ?? value}
+              formatter={(value) => getTagConfig(value, customTags).label}
             />
-            {tags.map((tag) => (
-              <Bar key={tag} dataKey={tag} stackId="a" fill={TAG_HEX_COLORS[tag]} />
+            {allTags.map((tagId) => (
+              <Bar
+                key={tagId}
+                dataKey={tagId}
+                stackId="a"
+                fill={getTagFillColor(tagId, customTags)}
+              />
             ))}
           </BarChart>
         </ResponsiveContainer>
