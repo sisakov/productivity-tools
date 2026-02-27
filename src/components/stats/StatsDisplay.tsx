@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { usePomodoroContext } from "@/context/PomodoroContext"
-import { TAG_CONFIG } from "@/constants/pomodoro"
+import { getTagConfig, getTagInlineStyles } from "@/constants/pomodoro"
 
 export function StatsDisplay() {
-  const { stats } = usePomodoroContext()
+  const { stats, customTags } = usePomodoroContext()
   const { todayStats, weekStats, currentStreak } = stats
 
   const todayMinutes = Math.floor(todayStats.totalDuration / 60)
@@ -39,12 +39,13 @@ export function StatsDisplay() {
             <div className="flex gap-2 justify-center flex-wrap">
               {Object.entries(todayStats.byTag).map(([tag, count]) => {
                 if (count === 0) return null
-                const config = TAG_CONFIG[tag as keyof typeof TAG_CONFIG]
+                const config = getTagConfig(tag, customTags)
                 return (
                   <Badge
                     key={tag}
                     variant="secondary"
                     className={`${config.bgColor} ${config.textColor}`}
+                    style={getTagInlineStyles(config)}
                   >
                     {config.label}: {count}
                   </Badge>

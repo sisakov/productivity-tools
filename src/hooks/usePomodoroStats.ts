@@ -1,11 +1,17 @@
 import { useMemo } from "react"
-import { PomodoroSession, DayStats, PomodoroTag } from "@/types/pomodoro"
+import { PomodoroSession, DayStats, CustomTag } from "@/types/pomodoro"
+import { BUILTIN_TAGS } from "@/constants/pomodoro"
 import { format, startOfDay, subDays, isWithinInterval, startOfWeek, startOfMonth } from "date-fns"
 
-export function usePomodoroStats(sessions: PomodoroSession[]) {
+export function usePomodoroStats(sessions: PomodoroSession[], customTags: CustomTag[]) {
   const completedSessions = useMemo(
     () => sessions.filter((s) => s.status === "completed"),
     [sessions]
+  )
+
+  const allTagIds = useMemo(
+    () => [...BUILTIN_TAGS, ...customTags.map((t) => t.id)],
+    [customTags]
   )
 
   const todayStats = useMemo(() => {
@@ -15,16 +21,11 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
       return sessionDate.getTime() === today.getTime()
     })
 
-    const byTag: Record<PomodoroTag, number> = {
-      work: 0,
-      learn: 0,
-      rest: 0,
-    }
-
+    const byTag: Record<string, number> = Object.fromEntries(allTagIds.map((id) => [id, 0]))
     let totalDuration = 0
 
     todaySessions.forEach((session) => {
-      byTag[session.tag] = (byTag[session.tag] || 0) + 1
+      byTag[session.tag] = (byTag[session.tag] ?? 0) + 1
       totalDuration += session.duration
     })
 
@@ -35,7 +36,7 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
       totalDuration,
       byTag,
     }
-  }, [completedSessions])
+  }, [completedSessions, allTagIds])
 
   const weekStats = useMemo(() => {
     const today = new Date()
@@ -47,16 +48,11 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
       })
     )
 
-    const byTag: Record<PomodoroTag, number> = {
-      work: 0,
-      learn: 0,
-      rest: 0,
-    }
-
+    const byTag: Record<string, number> = Object.fromEntries(allTagIds.map((id) => [id, 0]))
     let totalDuration = 0
 
     weekSessions.forEach((session) => {
-      byTag[session.tag] = (byTag[session.tag] || 0) + 1
+      byTag[session.tag] = (byTag[session.tag] ?? 0) + 1
       totalDuration += session.duration
     })
 
@@ -66,7 +62,7 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
       totalDuration,
       byTag,
     }
-  }, [completedSessions])
+  }, [completedSessions, allTagIds])
 
   const monthStats = useMemo(() => {
     const today = new Date()
@@ -78,16 +74,11 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
       })
     )
 
-    const byTag: Record<PomodoroTag, number> = {
-      work: 0,
-      learn: 0,
-      rest: 0,
-    }
-
+    const byTag: Record<string, number> = Object.fromEntries(allTagIds.map((id) => [id, 0]))
     let totalDuration = 0
 
     monthSessions.forEach((session) => {
-      byTag[session.tag] = (byTag[session.tag] || 0) + 1
+      byTag[session.tag] = (byTag[session.tag] ?? 0) + 1
       totalDuration += session.duration
     })
 
@@ -97,7 +88,7 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
       totalDuration,
       byTag,
     }
-  }, [completedSessions])
+  }, [completedSessions, allTagIds])
 
   const getStatsByDateRange = useMemo(
     () => (startDate: Date, endDate: Date): DayStats => {
@@ -108,16 +99,11 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
         })
       )
 
-      const byTag: Record<PomodoroTag, number> = {
-        work: 0,
-        learn: 0,
-        rest: 0,
-      }
-
+      const byTag: Record<string, number> = Object.fromEntries(allTagIds.map((id) => [id, 0]))
       let totalDuration = 0
 
       rangeSessions.forEach((session) => {
-        byTag[session.tag] = (byTag[session.tag] || 0) + 1
+        byTag[session.tag] = (byTag[session.tag] ?? 0) + 1
         totalDuration += session.duration
       })
 
@@ -129,7 +115,7 @@ export function usePomodoroStats(sessions: PomodoroSession[]) {
         byTag,
       }
     },
-    [completedSessions]
+    [completedSessions, allTagIds]
   )
 
   const currentStreak = useMemo(() => {

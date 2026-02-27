@@ -7,7 +7,7 @@ import { usePomodoroContext } from "@/context/PomodoroContext"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns"
 
 export function PomodoroCalendar() {
-  const { getSessionsByDate, getDayStats } = usePomodoroContext()
+  const { getSessionsByDate, getDayStats, customTags } = usePomodoroContext()
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -41,7 +41,7 @@ export function PomodoroCalendar() {
       return null
     }
 
-    return <CalendarDay stats={stats} />
+    return <CalendarDay stats={stats} customTags={customTags} />
   }
 
   const selectedDateSessions = selectedDate ? getSessionsByDate(selectedDate) : []
@@ -67,6 +67,7 @@ export function PomodoroCalendar() {
         onOpenChange={setDialogOpen}
         date={selectedDate}
         sessions={selectedDateSessions}
+        customTags={customTags}
       />
     </>
   )

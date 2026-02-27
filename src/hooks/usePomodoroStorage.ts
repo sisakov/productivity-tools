@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { PomodoroSession, PomodoroStorageData, DayStats, PomodoroTag } from "@/types/pomodoro"
+import { PomodoroSession, PomodoroStorageData, DayStats, CustomTag } from "@/types/pomodoro"
 import { loadData, saveData } from "@/lib/storage"
+import { BUILTIN_TAGS } from "@/constants/pomodoro"
 import { format, startOfDay } from "date-fns"
 
 export function usePomodoroStorage() {
@@ -41,6 +42,34 @@ export function usePomodoroStorage() {
     }))
   }, [])
 
+  const addCustomTag = useCallback((tag: CustomTag) => {
+    setData((prev) => ({
+      ...prev,
+      customTags: [...prev.customTags, tag],
+    }))
+  }, [])
+
+  const updateCustomTag = useCallback((id: string, updates: Partial<Omit<CustomTag, "id">>) => {
+    setData((prev) => ({
+      ...prev,
+      customTags: prev.customTags.map((tag) =>
+        tag.id === id ? { ...tag, ...updates } : tag
+      ),
+    }))
+  }, [])
+
+  const deleteCustomTag = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      customTags: prev.customTags.filter((tag) => tag.id !== id),
+    }))
+  }, [])
+
+  const isTagInUse = useCallback(
+    (tagId: string) => data.sessions.some((session) => session.tag === tagId),
+    [data.sessions]
+  )
+
   const getSessionsByDate = useCallback(
     (date: Date): PomodoroSession[] => {
       const dateStr = format(startOfDay(date), "yyyy-MM-dd")
@@ -59,16 +88,13 @@ export function usePomodoroStorage() {
 
       const completed = sessions.filter((s) => s.status === "completed")
 
-      const byTag: Record<PomodoroTag, number> = {
-        work: 0,
-        learn: 0,
-        rest: 0,
-      }
+      const allTagIds = [...BUILTIN_TAGS, ...(data.customTags ?? []).map((t) => t.id)]
+      const byTag: Record<string, number> = Object.fromEntries(allTagIds.map((id) => [id, 0]))
 
       let totalDuration = 0
 
       completed.forEach((session) => {
-        byTag[session.tag] = (byTag[session.tag] || 0) + 1
+        byTag[session.tag] = (byTag[session.tag] ?? 0) + 1
         totalDuration += session.duration
       })
 
@@ -80,7 +106,7 @@ export function usePomodoroStorage() {
         byTag,
       }
     },
-    [getSessionsByDate]
+    [getSessionsByDate, data.customTags]
   )
 
   const getAllSessions = useMemo(() => data.sessions, [data.sessions])
@@ -92,9 +118,14 @@ export function usePomodoroStorage() {
 
   return {
     sessions: data.sessions,
+    customTags: data.customTags ?? [],
     addSession,
     updateSession,
     deleteSession,
+    addCustomTag,
+    updateCustomTag,
+    deleteCustomTag,
+    isTagInUse,
     getSessionsByDate,
     getDayStats,
     getAllSessions,

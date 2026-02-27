@@ -1,6 +1,12 @@
-export type PomodoroTag = "work" | "learn" | "rest"
+export type PomodoroTag = string
 
 export type SessionStatus = "running" | "paused" | "completed" | "cancelled"
+
+export interface CustomTag {
+  id: string        // e.g. "exercise-1717000000000"
+  label: string     // e.g. "Exercise"
+  hexColor: string  // e.g. "#f97316"
+}
 
 export interface PomodoroSession {
   id: string
@@ -16,7 +22,7 @@ export interface DayStats {
   totalSessions: number
   completedSessions: number
   totalDuration: number // seconds
-  byTag: Record<PomodoroTag, number> // count by tag
+  byTag: Record<string, number> // count by tag
 }
 
 export interface TimerState {
@@ -29,6 +35,7 @@ export interface TimerState {
 export interface PomodoroStorageData {
   version: number
   sessions: PomodoroSession[]
+  customTags: CustomTag[]
 }
 
 export interface TagConfig {
@@ -36,4 +43,5 @@ export interface TagConfig {
   color: string
   bgColor: string
   textColor: string
+  hexColor?: string
 }

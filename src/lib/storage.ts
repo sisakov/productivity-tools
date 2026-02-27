@@ -4,6 +4,7 @@ import { STORAGE_KEY, STORAGE_VERSION } from "@/constants/pomodoro"
 const DEFAULT_DATA: PomodoroStorageData = {
   version: STORAGE_VERSION,
   sessions: [],
+  customTags: [],
 }
 
 /**
@@ -66,12 +67,19 @@ export function migrateData(data: PomodoroStorageData): PomodoroStorageData {
 
   // Migration from version 0 (no version) to version 1
   if (!migrated.version) {
-    migrated.version = STORAGE_VERSION
+    migrated.version = 1
     console.log("Migrated data to version 1")
   }
 
-  // Future migrations would go here
-  // if (migrated.version < 2) { ... }
+  // Migration from version 1 to version 2: add customTags
+  if (migrated.version < 2) {
+    migrated = {
+      ...migrated,
+      customTags: Array.isArray(migrated.customTags) ? migrated.customTags : [],
+    }
+    migrated.version = 2
+    console.log("Migrated data to version 2")
+  }
 
   return migrated
 }

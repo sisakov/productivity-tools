@@ -1,10 +1,9 @@
 import { usePomodoroContext } from "@/context/PomodoroContext"
 import { Progress } from "@/components/ui/progress"
-import { DEFAULT_POMODORO_DURATION } from "@/constants/pomodoro"
-import { TAG_CONFIG } from "@/constants/pomodoro"
+import { DEFAULT_POMODORO_DURATION, getTagConfig, getTagInlineStyles } from "@/constants/pomodoro"
 
 export function TimerDisplay() {
-  const { timerState, selectedTag } = usePomodoroContext()
+  const { timerState, selectedTag, customTags } = usePomodoroContext()
   const { timeRemaining, isActive, isPaused } = timerState
 
   const minutes = Math.floor(timeRemaining / 60)
@@ -17,7 +16,8 @@ export function TimerDisplay() {
   const progress =
     ((DEFAULT_POMODORO_DURATION - timeRemaining) / DEFAULT_POMODORO_DURATION) * 100
 
-  const config = TAG_CONFIG[selectedTag]
+  const config = getTagConfig(selectedTag, customTags)
+  const inlineStyles = getTagInlineStyles(config)
 
   const getStatusText = () => {
     if (!isActive) return "Ready to start"
@@ -45,7 +45,10 @@ export function TimerDisplay() {
       )}
 
       {isActive && (
-        <div className={`px-4 py-2 rounded-full ${config.bgColor} ${config.textColor} text-sm font-medium`}>
+        <div
+          className={`px-4 py-2 rounded-full ${config.bgColor} ${config.textColor} text-sm font-medium`}
+          style={inlineStyles}
+        >
           {config.label}
         </div>
       )}

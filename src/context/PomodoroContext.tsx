@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react"
-import { PomodoroTag, PomodoroSession, TimerState } from "@/types/pomodoro"
+import { PomodoroTag, PomodoroSession, TimerState, CustomTag } from "@/types/pomodoro"
 import { usePomodoro } from "@/hooks/usePomodoro"
 import { usePomodoroStorage } from "@/hooks/usePomodoroStorage"
 import { usePomodoroStats } from "@/hooks/usePomodoroStats"
@@ -35,6 +35,13 @@ interface PomodoroContextValue {
   deleteSession: (sessionId: string) => void
   updateSession: (sessionId: string, updates: Partial<PomodoroSession>) => void
 
+  // Custom tags
+  customTags: CustomTag[]
+  addCustomTag: (tag: CustomTag) => void
+  updateCustomTag: (id: string, updates: Partial<Omit<CustomTag, "id">>) => void
+  deleteCustomTag: (id: string) => void
+  isTagInUse: (tagId: string) => boolean
+
   // Statistics
   stats: ReturnType<typeof usePomodoroStats>
 }
@@ -58,7 +65,7 @@ export function PomodoroProvider({ children }: PomodoroProviderProps) {
   const [currentSession, setCurrentSession] = useState<PomodoroSession | null>(null)
 
   const storage = usePomodoroStorage()
-  const stats = usePomodoroStats(storage.sessions)
+  const stats = usePomodoroStats(storage.sessions, storage.customTags)
 
   const handleComplete = useCallback(() => {
     if (currentSession) {
@@ -156,6 +163,11 @@ export function PomodoroProvider({ children }: PomodoroProviderProps) {
     getDayStats: storage.getDayStats,
     deleteSession: storage.deleteSession,
     updateSession: storage.updateSession,
+    customTags: storage.customTags,
+    addCustomTag: storage.addCustomTag,
+    updateCustomTag: storage.updateCustomTag,
+    deleteCustomTag: storage.deleteCustomTag,
+    isTagInUse: storage.isTagInUse,
     stats,
   }
 
